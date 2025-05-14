@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <iomanip>
 
 using namespace std;
 
@@ -49,9 +50,10 @@ int main()
   bool arrayLoaded = false;
   SortMetrics lastMetrics;
   vector<SortResult> sortResults;
-  int lastUsedThreads = 0;
+  int lastUsedThreads = 1;
 
-  while (true)
+  bool continueProgram = true;
+  while (continueProgram)
   {
     int mainChoice = showMainMenu();
 
@@ -80,10 +82,16 @@ int main()
             int minValue = getIntInput("Введіть мінімальне значення: ");
             int maxValue = getIntInput("Введіть максимальне значення: ");
 
+            if (size <= 0)
+            {
+              cout << "Розмір масиву повинен бути більшим за 0.\n";
+              break;
+            }
+
             if (minValue > maxValue)
             {
+              cout << "Мінімальне значення не може бути більшим за максимальне. Значення поміняються місцями.\n";
               swap(minValue, maxValue);
-              cout << "Примітка: мінімальне і максимальне значення поміняні місцями.\n";
             }
 
             array = ArrayOperations::generateRandomArray(size, minValue, maxValue);
@@ -97,6 +105,9 @@ int main()
             {
               saveArrayToFile(array);
             }
+
+            // Очищаємо попередні результати сортування
+            sortResults.clear();
             break;
           }
           case 2:
@@ -113,6 +124,9 @@ int main()
               cout << "Масив: ";
               ArrayOperations::printArray(array);
             }
+
+            // Очищаємо попередні результати сортування
+            sortResults.clear();
             break;
           }
           case 3:
@@ -201,7 +215,10 @@ int main()
             vector<int> arrayCopy = array;
 
             cout << "Початок сортування масиву розміром " << array.size() << " елементів...\n";
-            lastMetrics = ArrayOperations::bubbleSort(arrayCopy);
+
+            bool detailedMode = getDetailedMode();
+
+            lastMetrics = ArrayOperations::bubbleSort(arrayCopy, detailedMode);
 
             bool isSorted = ArrayOperations::isSorted(arrayCopy);
             cout << "Масив " << (isSorted ? "успішно відсортований" : "НЕ відсортований") << ".\n";
@@ -234,7 +251,9 @@ int main()
 
             int numThreads = getIntInput("Введіть кількість потоків (0 для автоматичного визначення): ");
 
-            lastMetrics = ArrayOperations::bubbleSortMultithreaded(arrayCopy, numThreads);
+            bool detailedMode = getDetailedMode();
+
+            lastMetrics = ArrayOperations::bubbleSortMultithreaded(arrayCopy, numThreads, detailedMode);
             lastUsedThreads = stoi(lastMetrics.additionalInfo["numThreads"]);
 
             bool isSorted = ArrayOperations::isSorted(arrayCopy);
@@ -271,15 +290,17 @@ int main()
               cout << "2. Багатопотокове сортування\n";
               int choice = getIntInput("Ваш вибір: ");
 
+              bool detailedMode = getDetailedMode();
+
               if (choice == 1)
               {
-                lastMetrics = ArrayOperations::bubbleSort(array);
+                lastMetrics = ArrayOperations::bubbleSort(array, detailedMode);
                 sortResults.push_back(SortResult("Послідовний", lastMetrics, 1));
               }
               else
               {
                 int numThreads = getIntInput("Введіть кількість потоків (0 для автоматичного визначення): ");
-                lastMetrics = ArrayOperations::bubbleSortMultithreaded(array, numThreads);
+                lastMetrics = ArrayOperations::bubbleSortMultithreaded(array, numThreads, detailedMode);
                 lastUsedThreads = stoi(lastMetrics.additionalInfo["numThreads"]);
                 sortResults.push_back(SortResult("Багатопотоковий", lastMetrics, lastUsedThreads));
               }
